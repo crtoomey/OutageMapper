@@ -12,52 +12,139 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 // Define circles for outages
-var NYcircle1 = L.circle([40.7128, -74.0060], {
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.5,
-    radius: 100000
-}).addTo(map);
-var NYcircle2 = L.circle([42.6526, -73.7562], {
-    color: 'orange',
-    fillColor: '#ffa500',
-    fillOpacity: 0.5,
-    radius: 100000
-}).addTo(map);
-var NYcircle3 = L.circle([42.8864, -78.8784], {
-    color: 'yellow',
-    fillColor: '#ffff00',
-    fillOpacity: 0.5,
-    radius: 100000
-}).addTo(map);
+// var NYcircle1 = L.circle([40.7128, -74.0060], {
+//     color: 'red',
+//     fillColor: '#f03',
+//     fillOpacity: 0.5,
+//     radius: 100000
+// }).addTo(map);
+// var NYcircle2 = L.circle([42.6526, -73.7562], {
+//     color: 'orange',
+//     fillColor: '#ffa500',
+//     fillOpacity: 0.5,
+//     radius: 100000
+// }).addTo(map);
+// var NYcircle3 = L.circle([42.8864, -78.8784], {
+//     color: 'yellow',
+//     fillColor: '#ffff00',
+//     fillOpacity: 0.5,
+//     radius: 100000
+// }).addTo(map);
+
+
+
 // Bind popups to circles
-NYcircle1.bindPopup("<b>Critical Outage</b>");
-NYcircle2.bindPopup("<b>Medium Outage</b>");
-NYcircle3.bindPopup("<b>Low Outage</b>");
+// NYcircle1.bindPopup("<b>Critical Outage</b>");
+// NYcircle2.bindPopup("<b>Medium Outage</b>");
+// NYcircle3.bindPopup("<b>Low Outage</b>");
 // Outage alerts data
-var outageAlerts = [
-    { location: "New York City", severity: "Critical Outage", details: "5000 customers impacted" },
-    { location: "Albany", severity: "Medium Outage", details: "1500 customers impacted" },
-    { location: "Buffalo", severity: "Low Outage", details: "500 customers impacted" }
-];
+// var outageAlerts = [
+//     { location: "New York City", severity: "Critical Outage", details: "5000 customers impacted" },
+//     { location: "Albany", severity: "Medium Outage", details: "1500 customers impacted" },
+//     { location: "Buffalo", severity: "Low Outage", details: "500 customers impacted" }
+// ];
 // Selecting the alert display window
 var alertWindow = document.querySelector('.alert');
 // Add outage alerts to the alert window
-NYcircle1.on('click', function () {
-    addAlertToChat(outageAlerts[0]);
-});
-NYcircle2.on('click', function () {
-    addAlertToChat(outageAlerts[1]);
-});
-NYcircle3.on('click', function () {
-    addAlertToChat(outageAlerts[2]);
-});
+// NYcircle1.on('click', function () {
+//     addAlertToChat(outageAlerts[0]);
+// });
+// NYcircle2.on('click', function () {
+//     addAlertToChat(outageAlerts[1]);
+// });
+// NYcircle3.on('click', function () {
+//     addAlertToChat(outageAlerts[2]);
+// });
 // Function to add alerts to chat window
-function addAlertToChat(alert) {
+function addAlertToChat(alert, location) {
     // Keep existing content and append new alerts
-    var alertMessage = `<strong>${alert.severity}:</strong> ${alert.location} - ${alert.details}<br>`;
+    var alertMessage = `<strong>${alert.label}:</strong> ${location} - ${alert.details}<br>`;
     alertWindow.innerHTML += alertMessage;
 }
+
+// 
+
+function dealWithOutage() {
+    
+}
+
+function findLocation(lat) {
+    var location = 'N/A';
+    if (lat === 40.7128) {
+        location = 'New York City';
+        return location
+    } else if (lat === 34.0522) {
+        location = 'Los Angeles';
+        return location;
+    } else if (lat === 41.8781) {
+        location = 'Chicago';
+        return location;
+    } else if (lat === 29.7604) {
+        location = 'Houston';
+        return location;
+    } else if (lat === 33.4484) {
+        location = 'Phoenix';
+        return location;
+    } else {
+        return 'Invalid';
+    };
+
+};
+
+// Function to create outage bubbles with specialized scenarios
+function createOutage(lat, lng, color, label) {
+    var circle = L.circle([lat, lng], {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.5,
+        radius: 100000
+    }).addTo(map);
+
+    circle.bindPopup(`<b>Outage Type:</b> ${label}`);
+    circle.on('click', function () {
+        var alertMessage = `<p>Looking into ${label} at ${findLocation(lat)}. Please use command line to address the issue.</p>`;
+        alertWindow.innerHTML += alertMessage;
+        dealWithOutage();
+    });
+}
+
+// Define the types of outages with colors and labels
+var outageTypes = [
+    { color: 'red', label: 'Critical Outage', details: 'Potential DDoS attack' },
+    { color: 'orange', label: 'Medium Outage', details: 'Storms reported in area' },
+    { color: 'yellow', label: 'Low Outage', details: 'Customers reporting slow internet connection' }
+];
+
+// Random interval timelapse function to simulate the appearance of outages
+function randomizeOutages() {
+    var locations = [
+        [40.7128, -74.0060],  // New York City
+        [34.0522, -118.2437], // Los Angeles
+        [41.8781, -87.6298],  // Chicago
+        [29.7604, -95.3698],  // Houston
+        [33.4484, -112.0740]  // Phoenix
+    ];
+
+    locations.forEach(function (loc, index) {
+        // Random delay between 1 and 5 seconds
+        var delay = Math.random() * 4000 + 1000;
+        
+
+        setTimeout(function () {
+            var location = findLocation(loc[0]);
+            var outageType = outageTypes[Math.floor(Math.random() * outageTypes.length)];
+            createOutage(loc[0], loc[1], outageType.color, outageType.label);
+            addAlertToChat(outageType, location);
+        }, delay);
+    });
+}
+
+// Trigger the timelapse of outages
+randomizeOutages();
+
+
+// 
+
 // Function to add command responses to the same chat window
 function addCommandToChat(commandResponse) {
     // Append command response to the alert window
@@ -74,7 +161,7 @@ document.getElementById("submit-command").addEventListener("click", function () 
     } else if (commandInput === "dispatch") {
         addCommandToChat("Dispatching repair team...");
     } else if (commandInput === "help") {
-        addCommandToChat("Use 'troubleshoot', 'escalate', or 'dispatch'.");
+        addCommandToChat("Use 'troubleshoot', 'escalate', or 'dispatch'. Use 'clear' to clear the alert window.");
     } else if (commandInput === "clear") {
         alertWindow.innerHTML = '';
     } else {
