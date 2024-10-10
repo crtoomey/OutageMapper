@@ -10,7 +10,7 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="./script.js"></script>
+    <script src="./script.js" defer></script>
 </head>
 
 <body>
@@ -27,52 +27,6 @@
 
             </div>
 
-            <!-- Map JS -->
-            <script>
-                var map = L.map('map').setView([39.8283, -98.5795], 4);
-
-                // Set max bounds to limit panning to the continental U.S.
-                var southWest = L.latLng(24.396308, -125.0);
-                var northEast = L.latLng(49.384358, -66.93457);
-                var bounds = L.latLngBounds(southWest, northEast);
-
-                map.setMaxBounds(bounds);
-                map.on('drag', function () {
-                    map.panInsideBounds(bounds, { animate: false });
-                });
-
-                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                }).addTo(map);
-
-                var NYcircle1 = L.circle([40.7128, -74.0060], {
-                    color: 'red',
-                    fillColor: '#f03',
-                    fillOpacity: 0.5,
-                    radius: 50000
-                }).addTo(map);
-
-                var NYcircle2 = L.circle([42.6526, -73.7562], {
-                    color: 'orange',
-                    fillColor: '#ffa500',
-                    fillOpacity: 0.5,
-                    radius: 50000
-                }).addTo(map);
-
-                var NYcircle3 = L.circle([42.8864, -78.8784], {
-                    color: 'yellow',
-                    fillColor: '#ffff00',
-                    fillOpacity: 0.5,
-                    radius: 50000
-                }).addTo(map);
-
-                NYcircle1.bindPopup("<b>Critical Outage</b>");
-                NYcircle2.bindPopup("<b>Medium Outage</b>");
-                NYcircle3.bindPopup("<b>Low Outage</b>");
-
-            </script>
-
         </section>
 
         <section class="alert-window">
@@ -81,8 +35,13 @@
                 Outage Alerts
             </div>
 
-            <div class="alert">
+            <div class="alert" id="alert-display">
 
+            </div>
+            
+            <div class="command-line">
+                <input type="text" id="command-input" placeholder="Type a command... Use 'help' to see a list of commands.">
+                <button id="submit-command">Submit</button>
             </div>
 
         </section>
