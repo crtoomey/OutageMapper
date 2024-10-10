@@ -11,50 +11,11 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
-// Define circles for outages
-// var NYcircle1 = L.circle([40.7128, -74.0060], {
-//     color: 'red',
-//     fillColor: '#f03',
-//     fillOpacity: 0.5,
-//     radius: 100000
-// }).addTo(map);
-// var NYcircle2 = L.circle([42.6526, -73.7562], {
-//     color: 'orange',
-//     fillColor: '#ffa500',
-//     fillOpacity: 0.5,
-//     radius: 100000
-// }).addTo(map);
-// var NYcircle3 = L.circle([42.8864, -78.8784], {
-//     color: 'yellow',
-//     fillColor: '#ffff00',
-//     fillOpacity: 0.5,
-//     radius: 100000
-// }).addTo(map);
 
 
-
-// Bind popups to circles
-// NYcircle1.bindPopup("<b>Critical Outage</b>");
-// NYcircle2.bindPopup("<b>Medium Outage</b>");
-// NYcircle3.bindPopup("<b>Low Outage</b>");
-// Outage alerts data
-// var outageAlerts = [
-//     { location: "New York City", severity: "Critical Outage", details: "5000 customers impacted" },
-//     { location: "Albany", severity: "Medium Outage", details: "1500 customers impacted" },
-//     { location: "Buffalo", severity: "Low Outage", details: "500 customers impacted" }
-// ];
 // Selecting the alert display window
 var alertWindow = document.querySelector('.alert');
-// Add outage alerts to the alert window
-// NYcircle1.on('click', function () {
-//     addAlertToChat(outageAlerts[0]);
-// });
-// NYcircle2.on('click', function () {
-//     addAlertToChat(outageAlerts[1]);
-// });
-// NYcircle3.on('click', function () {
-//     addAlertToChat(outageAlerts[2]);
-// });
+
 // Function to add alerts to chat window
 function addAlertToChat(alert, location) {
     // Keep existing content and append new alerts
@@ -64,8 +25,21 @@ function addAlertToChat(alert, location) {
 
 // 
 
-function dealWithOutage() {
-    
+function dealWithOutage(label) {
+    // Need to add functionality and remove the hints
+    var alertMessage = '';
+    if (label === 'Critical Outage') {
+        alertMessage = 'Need to escalate this issue';
+        alertWindow.innerHTML += alertMessage;
+    } else if (label === 'Medium Outage') {
+        alertMessage = 'Need to dispatch repair team for this issue';
+        alertWindow.innerHTML += alertMessage;
+    } else if (label === 'Low Outage') {
+        alertMessage = 'Need to troubleshoot this issue';
+        alertWindow.innerHTML += alertMessage;
+    } else {
+        console.log('Something went wrong');
+    }
 }
 
 function findLocation(lat) {
@@ -92,7 +66,7 @@ function findLocation(lat) {
 };
 
 // Function to create outage bubbles with specialized scenarios
-function createOutage(lat, lng, color, label) {
+function createOutage(lat, lng, color, label, details) {
     var circle = L.circle([lat, lng], {
         color: color,
         fillColor: color,
@@ -100,18 +74,21 @@ function createOutage(lat, lng, color, label) {
         radius: 100000
     }).addTo(map);
 
+    var detail = '';
+    detail = details.toLowerCase();
+
     circle.bindPopup(`<b>Outage Type:</b> ${label}`);
     circle.on('click', function () {
-        var alertMessage = `<p>Looking into ${label} at ${findLocation(lat)}. Please use command line to address the issue.</p>`;
+        var alertMessage = `<p>Looking into ${label} with ${detail} in ${findLocation(lat)}. Please use command line to address the issue.</p>`;
         alertWindow.innerHTML += alertMessage;
-        dealWithOutage();
+        dealWithOutage(label);
     });
 }
 
 // Define the types of outages with colors and labels
 var outageTypes = [
     { color: 'red', label: 'Critical Outage', details: 'Potential DDoS attack' },
-    { color: 'orange', label: 'Medium Outage', details: 'Storms reported in area' },
+    { color: 'orange', label: 'Medium Outage', details: 'Storms reported in the area' },
     { color: 'yellow', label: 'Low Outage', details: 'Customers reporting slow internet connection' }
 ];
 
@@ -133,7 +110,7 @@ function randomizeOutages() {
         setTimeout(function () {
             var location = findLocation(loc[0]);
             var outageType = outageTypes[Math.floor(Math.random() * outageTypes.length)];
-            createOutage(loc[0], loc[1], outageType.color, outageType.label);
+            createOutage(loc[0], loc[1], outageType.color, outageType.label, outageType.details);
             addAlertToChat(outageType, location);
         }, delay);
     });
