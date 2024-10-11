@@ -3,6 +3,10 @@ var map = L.map('map').setView([39.8283, -98.5795], 4);
 var southWest = L.latLng(24.396308, -125.0);
 var northEast = L.latLng(49.384358, -66.93457);
 var bounds = L.latLngBounds(southWest, northEast);
+var selectedOutage = null;
+var alertWindow = document.querySelector('.alert');
+
+// Leaflet map stuff
 map.setMaxBounds(bounds);
 map.on('drag', function () {
     map.panInsideBounds(bounds, { animate: false });
@@ -12,36 +16,45 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
-
-// Selecting the alert display window
-var alertWindow = document.querySelector('.alert');
-
-// Function to add alerts to chat window
+// Function to add alerts to alert window
 function addAlertToChat(alert, location) {
-    // Keep existing content and append new alerts
     var alertMessage = `<strong>${alert.label}:</strong> ${location} - ${alert.details}<br>`;
     alertWindow.innerHTML += alertMessage;
 }
 
-// 
-
-function dealWithOutage(label) {
-    // Need to add functionality and remove the hints
-    var alertMessage = '';
-    if (label === 'Critical Outage') {
-        alertMessage = 'Need to escalate this issue';
-        alertWindow.innerHTML += alertMessage;
-    } else if (label === 'Medium Outage') {
-        alertMessage = 'Need to dispatch repair team for this issue';
-        alertWindow.innerHTML += alertMessage;
-    } else if (label === 'Low Outage') {
-        alertMessage = 'Need to troubleshoot this issue';
-        alertWindow.innerHTML += alertMessage;
+// Function to handle the diagnostics command 
+function runDiagnostics(label) {
+    if (label === "Low Outage") {
+        addCommandToChat("Speed test shows download speeds at 5 Mbps, customer expects 100 Mbps.")
+    } else if (label === "Medium Outage") {
+        addCommandToChat("No connection from optical node to customers. Storms have been reported in the area.")
+    } else if (label === "Critical Outage") {
+        addCommandToChat("Network traffic spikes detected in the core network.")
     } else {
-        console.log('Something went wrong');
+        addCommandToChat("Diagnostics failed.")
     }
 }
 
+
+// Don't think we need this function
+function dealWithOutage(outage) {
+    selectedOutage.label = outage.label;
+    selectedOutage.details = outage.details;
+    var alertMessage = '';
+    if (outage.label === 'Critical Outage') {
+        alertMessage = 'Need to escalate this issue';
+    } else if (outage.label === 'Medium Outage') {
+        alertMessage = 'Need to dispatch repair team for this issue';
+    } else if (outage.label === 'Low Outage') {
+        alertMessage = 'Need to troubleshoot this issue';
+    } else {
+        console.log('Something went wrong');
+    }
+
+    alertWindow.innerHTML += alertMessage;
+}
+
+// Function to find location name based on lat value
 function findLocation(lat) {
     var location = 'N/A';
     if (lat === 40.7128) {
@@ -76,20 +89,25 @@ function createOutage(lat, lng, color, label, details) {
 
     var detail = '';
     detail = details.toLowerCase();
+    var outage = { label: label, details: details, lat: lat, lng: lng };
 
     circle.bindPopup(`<b>Outage Type:</b> ${label}`);
+
     circle.on('click', function () {
+        selectedOutage = { circle: circle, label: label };
+        console.log("Outage selected ", selectedOutage);
+
         var alertMessage = `<p>Looking into ${label} with ${detail} in ${findLocation(lat)}. Please use command line to address the issue.</p>`;
         alertWindow.innerHTML += alertMessage;
-        dealWithOutage(label);
+        dealWithOutage(outage);
     });
 }
 
-// Define the types of outages with colors and labels
+// Define the types of outages with colors and labels 
 var outageTypes = [
-    { color: 'red', label: 'Critical Outage', details: 'Potential DDoS attack' },
-    { color: 'orange', label: 'Medium Outage', details: 'Storms reported in the area' },
-    { color: 'yellow', label: 'Low Outage', details: 'Customers reporting slow internet connection' }
+    { color: 'red', label: 'Critical Outage', details: 'Network traffic anomaly detected' },
+    { color: 'orange', label: 'Medium Outage', details: 'Customers reporting complete TV and internet outages' },
+    { color: 'yellow', label: 'Low Outage', details: 'Customers reporting slow internet speeds' }
 ];
 
 // Random interval timelapse function to simulate the appearance of outages
@@ -103,9 +121,8 @@ function randomizeOutages() {
     ];
 
     locations.forEach(function (loc, index) {
-        // Random delay between 1 and 5 seconds
         var delay = Math.random() * 4000 + 1000;
-        
+
 
         setTimeout(function () {
             var location = findLocation(loc[0]);
@@ -119,31 +136,48 @@ function randomizeOutages() {
 // Trigger the timelapse of outages
 randomizeOutages();
 
-
-// 
-
 // Function to add command responses to the same chat window
 function addCommandToChat(commandResponse) {
-    // Append command response to the alert window
     var commandMessage = `<p class="command-response">${commandResponse}</p>`;
     alertWindow.innerHTML += commandMessage;
 }
+
 // Handling command submission
 document.getElementById("submit-command").addEventListener("click", function () {
     var commandInput = document.getElementById("command-input").value.toLowerCase();
-    if (commandInput === "troubleshoot") {
+
+    if (!selectedOutage || !selectedOutage.circle) {
+        addCommandToChat("No outage selected. Please click on an outage bubble to begin.");
+        return;
+    }
+
+    var label = selectedOutage;
+
+    if (commandInput === "troubleshoot" && selectedOutage.label === "Low Outage") {
         addCommandToChat("Troubleshooting issue...");
-    } else if (commandInput === "escalate") {
+        addCommandToChat("Outage successfully handled.");
+        map.removeLayer(selectedOutage.circle);
+        selectedOutage = null;
+    } else if (commandInput === "escalate" && selectedOutage.label === "Critical Outage") {
         addCommandToChat("Escalating issue to team lead...");
-    } else if (commandInput === "dispatch") {
+        addCommandToChat("Outage successfully handled.");
+        map.removeLayer(selectedOutage.circle);
+        selectedOutage = null;
+    } else if (commandInput === "dispatch" && selectedOutage.label === "Medium Outage") {
         addCommandToChat("Dispatching repair team...");
+        addCommandToChat("Outage successfully handled.");
+        map.removeLayer(selectedOutage.circle);
+        selectedOutage = null;
     } else if (commandInput === "help") {
-        addCommandToChat("Use 'troubleshoot', 'escalate', or 'dispatch'. Use 'clear' to clear the alert window.");
+        addCommandToChat("Use 'diagnostics', 'troubleshoot', 'escalate', or 'dispatch'. Use 'clear' to clear the alert window.");
     } else if (commandInput === "clear") {
         alertWindow.innerHTML = '';
+    } else if (commandInput === "diagnostics") {
+        addCommandToChat("Diagnosing issue...");
+        runDiagnostics(selectedOutage.label);
     } else {
-        addCommandToChat("Invalid command. Use 'help' for a list of valid commands.");
+        addCommandToChat("Invalid or incorrect command. Use 'help' for a list of valid commands.");
     }
-    // Clear the input field after submission
+    // Clear the input field
     document.getElementById("command-input").value = "";
 });
