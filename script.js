@@ -1,5 +1,5 @@
 // Leaflet map setup
-var map = L.map('map').setView([39.8283, -98.5795], 4);
+var map = L.map('map', { zoomControl: false }).setView([39.8283, -98.5795], 4);
 var southWest = L.latLng(24.396308, -125.0);
 var northEast = L.latLng(49.384358, -66.93457);
 var bounds = L.latLngBounds(southWest, northEast);
@@ -15,6 +15,14 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
+
+// Removing leaflet map zoom
+map.touchZoom.disable();
+map.doubleClickZoom.disable();
+map.scrollWheelZoom.disable();
+map.boxZoom.disable();
+map.keyboard.disable();
+
 
 // Function to add alerts to alert window
 function addAlertToChat(alert, location) {
