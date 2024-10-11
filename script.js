@@ -35,25 +35,6 @@ function runDiagnostics(label) {
     }
 }
 
-
-// Don't think we need this function
-function dealWithOutage(outage) {
-    selectedOutage.label = outage.label;
-    selectedOutage.details = outage.details;
-    var alertMessage = '';
-    if (outage.label === 'Critical Outage') {
-        alertMessage = 'Need to escalate this issue';
-    } else if (outage.label === 'Medium Outage') {
-        alertMessage = 'Need to dispatch repair team for this issue';
-    } else if (outage.label === 'Low Outage') {
-        alertMessage = 'Need to troubleshoot this issue';
-    } else {
-        console.log('Something went wrong');
-    }
-
-    alertWindow.innerHTML += alertMessage;
-}
-
 // Function to find location name based on lat value
 function findLocation(lat) {
     var location = 'N/A';
@@ -99,7 +80,6 @@ function createOutage(lat, lng, color, label, details) {
 
         var alertMessage = `<p>Looking into ${label} with ${detail} in ${findLocation(lat)}. Please use command line to address the issue.</p>`;
         alertWindow.innerHTML += alertMessage;
-        dealWithOutage(outage);
     });
 }
 
